@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interviewee • AI Interview Assistant</title>
+    <link rel="icon" href="assets/logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container">
+        <a class="brand" href="index.html">
+          <img src="assets/logo.svg" width="28" height="28" alt="" />
+          <span>AI Interview Assistant</span>
+        </a>
+        <ul class="menu-desktop">
+          <li><a href="interviewer.html">Interviewer</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="section">
+      <div class="container narrow">
+        <h1 class="mb-0">Interviewee</h1>
+        <p class="dim small">
+          Fill your profile (from resume or manually). Then start the timed
+          interview (6 questions: 2 Easy → 2 Medium → 2 Hard).
+        </p>
+
+        <!-- Profile -->
+        <section class="card">
+          <h2 class="mb-8">Your Profile</h2>
+          <form id="profile-form" class="grid" novalidate>
+            <label
+              >Full Name
+              <input type="text" id="name" placeholder="Your name" required />
+            </label>
+            <label
+              >Email
+              <input
+                type="email"
+                id="email"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label
+              >Phone
+              <input
+                type="tel"
+                id="phone"
+                placeholder="+91 98xxxxxx"
+                required
+              />
+            </label>
+          </form>
+
+          <details class="mt-12">
+            <summary>Paste text from your resume (optional)</summary>
+            <textarea
+              id="resumeText"
+              rows="5"
+              placeholder="Paste resume text here..."
+            ></textarea>
+            <div class="mt-8">
+              <button class="btn" id="tryExtract">
+                Try to auto-fill from text
+              </button>
+              <span id="extractStatus" class="small dim"></span>
+            </div>
+          </details>
+
+          <div class="mt-16">
+            <button class="btn" id="saveProfile">Save Profile</button>
+            <span id="profileStatus" class="small dim"></span>
+          </div>
+        </section>
+
+        <!-- Welcome Back Modal (simple inline) -->
+        <div id="welcomeBack" class="modal hidden">
+          <div class="modal-content">
+            <h3>Welcome back!</h3>
+            <p>We found an unfinished interview. Would you like to resume?</p>
+            <div class="flex gap-8 mt-12">
+              <button class="btn" id="resumeInterview">Resume</button>
+              <button class="btn outline" id="discardInterview">
+                Start Over
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interview -->
+        <section class="card mt-20">
+          <h2 class="mb-8">Interview</h2>
+          <p class="dim small">
+            You’ll get one question at a time. Answer before the timer hits
+            zero. On timeout, your answer is auto-submitted and we move on.
+          </p>
+
+          <div id="interviewNotReady" class="notice">
+            Save a valid profile first to enable Start.
+          </div>
+
+          <div class="flex gap-8 mt-12">
+            <button class="btn" id="startInterview" disabled>
+              Start Interview
+            </button>
+            <button class="btn outline" id="pauseInterview" disabled>
+              Pause
+            </button>
+          </div>
+
+          <div id="interviewUI" class="hidden mt-16">
+            <div class="flex-between">
+              <div class="badge" id="progress">Q1/6 • easy</div>
+              <div class="badge" id="timer">20s</div>
+            </div>
+
+            <div class="qa mt-12">
+              <div class="bubble ai" id="question">Question here…</div>
+              <textarea
+                id="answer"
+                rows="5"
+                placeholder="Type your answer here…"
+              ></textarea>
+              <div class="flex gap-8 mt-8">
+                <button class="btn" id="submitAnswer">Submit</button>
+                <button class="btn outline" id="skip">Skip</button>
+              </div>
+            </div>
+
+            <div id="interviewStatus" class="small dim mt-8"></div>
+          </div>
+
+          <div id="finalResult" class="hidden mt-16">
+            <h3>Done! 🎉</h3>
+            <p id="scoreLine" class="lead"></p>
+            <p id="summaryLine"></p>
+            <p class="small dim">
+              Your attempt is saved. You can see it on the Interviewer page.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>© <span id="year"></span> AI Interview Assistant</p>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // ==== Profile handling ====
+      const nameEl = document.getElementById("name");
+      const emailEl = document.getElementById("email");
+      const phoneEl = document.getElementById("phone");
+      const resumeTextEl = document.getElementById("resumeText");
+      const tryExtractBtn = document.getElementById("tryExtract");
+      const extractStatus = document.getElementById("extractStatus");
+      const saveProfileBtn = document.getElementById("saveProfile");
+      const profileStatus = document.getElementById("profileStatus");
+      const startBtn = document.getElementById("startInterview");
+      const pauseBtn = document.getElementById("pauseInterview");
+      const notReady = document.getElementById("interviewNotReady");
+
+      const wb = document.getElementById("welcomeBack");
+      const resumeBtn = document.getElementById("resumeInterview");
+      const discardBtn = document.getElementById("discardInterview");
+
+      // Prefill from saved profile
+      const saved = AI.loadProfile();
+      if (saved) {
+        nameEl.value = saved.name || "";
+        emailEl.value = saved.email || "";
+        phoneEl.value = saved.phone || "";
+      }
+
+      function checkProfileValid() {
+        const ok =
+          AI.validateEmail(emailEl.value) &&
+          AI.validatePhone(phoneEl.value) &&
+          !!nameEl.value.trim();
+        startBtn.disabled = !ok;
+        notReady.style.display = ok ? "none" : "";
+      }
+      ["input", "change"].forEach((evt) => {
+        nameEl.addEventListener(evt, checkProfileValid);
+        emailEl.addEventListener(evt, checkProfileValid);
+        phoneEl.addEventListener(evt, checkProfileValid);
+      });
+      checkProfileValid();
+
+      tryExtractBtn.addEventListener("click", () => {
+        const t = resumeTextEl.value || "";
+        const extracted = AI.extractFields(t);
+        if (extracted.name) nameEl.value = extracted.name;
+        if (extracted.email) emailEl.value = extracted.email;
+        if (extracted.phone) phoneEl.value = extracted.phone;
+        extractStatus.textContent =
+          "Attempted to extract fields from pasted text.";
+        checkProfileValid();
+      });
+
+      saveProfileBtn.addEventListener("click", () => {
+        const ok = AI.saveProfile({
+          name: nameEl.value.trim(),
+          email: emailEl.value.trim(),
+          phone: phoneEl.value.trim(),
+        });
+        profileStatus.textContent = ok
+          ? "Saved!"
+          : "Please enter valid Name, Email, Phone.";
+        checkProfileValid();
+      });
+
+      // Welcome Back if unfinished
+      if (AI.hasUnfinishedInterview()) {
+        wb.classList.remove("hidden");
+      }
+      resumeBtn.addEventListener("click", () => {
+        wb.classList.add("hidden");
+        startInterview(true);
+      });
+      discardBtn.addEventListener("click", () => {
+        wb.classList.add("hidden");
+        AI.discardInterview();
+      });
+
+      // ==== Interview flow ====
+      const ui = {
+        wrap: document.getElementById("interviewUI"),
+        progress: document.getElementById("progress"),
+        timer: document.getElementById("timer"),
+        question: document.getElementById("question"),
+        answer: document.getElementById("answer"),
+        submit: document.getElementById("submitAnswer"),
+        skip: document.getElementById("skip"),
+        status: document.getElementById("interviewStatus"),
+        final: document.getElementById("finalResult"),
+        scoreLine: document.getElementById("scoreLine"),
+        summaryLine: document.getElementById("summaryLine"),
+      };
+
+      startBtn.addEventListener("click", () => startInterview(false));
+      pauseBtn.addEventListener("click", () => AI.togglePause());
+
+      function startInterview(resume) {
+        ui.final.classList.add("hidden");
+        ui.wrap.classList.remove("hidden");
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        AI.startOrResumeInterview(resume, updateRender, finish);
+      }
+
+      function updateRender(state) {
+        ui.progress.textContent = `Q${state.index + 1}/6 • ${
+          state.current.difficulty
+        }`;
+        ui.timer.textContent = `${state.left}s`;
+        ui.question.textContent = state.current.prompt;
+        ui.answer.value = state.draft || "";
+        ui.status.textContent = state.paused ? "Paused" : "";
+      }
+
+      ui.answer.addEventListener("input", () => AI.setDraft(ui.answer.value));
+      ui.submit.addEventListener("click", () =>
+        AI.submitAnswer(ui.answer.value)
+      );
+      ui.skip.addEventListener("click", () => AI.submitAnswer(""));
+
+      function finish(result) {
+        ui.wrap.classList.add("hidden");
+        pauseBtn.disabled = true;
+        startBtn.disabled = false;
+        ui.final.classList.remove("hidden");
+        ui.scoreLine.textContent = `Final Score: ${
+          result.total
+        }/120 (avg ${Math.round(result.avg)}/20)`;
+        ui.summaryLine.textContent = result.summary;
+      }
+    </script>
+  </body>
+</html>

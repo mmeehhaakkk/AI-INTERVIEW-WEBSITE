@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interviewer • AI Interview Assistant</title>
+    <link rel="icon" href="assets/logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container">
+        <a class="brand" href="index.html">
+          <img src="assets/logo.svg" width="28" height="28" alt="" />
+          <span>AI Interview Assistant</span>
+        </a>
+        <ul class="menu-desktop">
+          <li><a href="interviewee.html">Interviewee</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="section">
+      <div class="container">
+        <h1 class="mb-0">Interviewer Dashboard</h1>
+        <p class="dim small">
+          Candidates are stored locally on this device. Sort, search, and view
+          details.
+        </p>
+
+        <div class="card">
+          <div class="flex-between">
+            <div class="flex gap-8">
+              <label class="mb-0"
+                >Search
+                <input type="text" id="q" placeholder="Name or Email" />
+              </label>
+            </div>
+            <div>
+              <label class="mb-0"
+                >Sort by
+                <select id="sortBy">
+                  <option value="score">Score (desc)</option>
+                  <option value="date">Date (newest)</option>
+                  <option value="name">Name (A→Z)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="table mt-12">
+            <div class="thead">
+              <div>Name</div>
+              <div>Email</div>
+              <div>Phone</div>
+              <div>Score</div>
+              <div>Date</div>
+              <div></div>
+            </div>
+            <div id="rows" class="tbody"></div>
+          </div>
+        </div>
+
+        <section class="card mt-20">
+          <h2>Candidate Detail</h2>
+          <div id="detail">Select a candidate to view their Q&amp;A.</div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>© <span id="year"></span> AI Interview Assistant</p>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      const q = document.getElementById("q");
+      const sortBy = document.getElementById("sortBy");
+      const rows = document.getElementById("rows");
+      const detail = document.getElementById("detail");
+
+      function render() {
+        const data = AI.getAllCandidates(q.value, sortBy.value);
+        rows.innerHTML = "";
+        data.forEach((c) => {
+          const row = document.createElement("div");
+          row.className = "tr";
+          row.innerHTML = `
+        <div>${AI.escape(c.name)}</div>
+        <div>${AI.escape(c.email)}</div>
+        <div>${AI.escape(c.phone)}</div>
+        <div>${c.total}</div>
+        <div>${new Date(c.createdAt).toLocaleString()}</div>
+        <div><button class="btn small" data-id="${c.id}">View</button></div>
+      `;
+          rows.appendChild(row);
+        });
+      }
+
+      rows.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-id]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-id");
+        const c = AI.getCandidate(id);
+        if (!c) return;
+        detail.innerHTML = `
+      <div class="badge mb-8">${AI.escape(c.name)} • ${AI.escape(
+          c.email
+        )} • Score ${c.total}/120</div>
+      ${c.qa
+        .map(
+          (r, i) => `
+        <div class="bubble ai"><strong>Q${i + 1} [${
+            r.difficulty
+          }]</strong>: ${AI.escape(r.q)}</div>
+        <div class="bubble me">${AI.escape(r.a || "(no answer)")}</div>
+        <p class="small dim">Score: ${r.score}/20 • Time used: ${
+            r.timeUsed
+          }s</p>
+      `
+        )
+        .join("")}
+      <p class="mt-12"><strong>Summary:</strong> ${AI.escape(c.summary)}</p>
+    `;
+      });
+
+      q.addEventListener("input", render);
+      sortBy.addEventListener("change", render);
+      render();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Interview Assistant (Website)</title>
+    <link rel="icon" href="assets/logo.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container">
+        <a class="brand" href="index.html">
+          <img src="assets/logo.svg" width="28" height="28" alt="" />
+          <span>AI Interview Assistant</span>
+        </a>
+        <ul class="menu-desktop">
+          <li><a href="interviewee.html">Interviewee</a></li>
+          <li><a href="interviewer.html">Interviewer</a></li>
+        </ul>
+      </nav>
+      <section class="hero">
+        <div class="container hero-inner">
+          <h1>Simple Website Edition</h1>
+          <p>
+            This is a static website (no framework) that demonstrates a timed
+            Q&amp;A interview and a dashboard saved locally on your device.
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="interviewee.html">Start as Interviewee</a>
+            <a class="btn outline" href="interviewer.html">Open Dashboard</a>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <main class="section">
+      <div class="container">
+        <h2>What’s inside?</h2>
+        <ul class="tick">
+          <li>
+            Interviewee page: profile capture (Name/Email/Phone) + 6 questions
+            with per-difficulty timers.
+          </li>
+          <li>
+            Auto-submit on timeout, scoring (heuristic), and a final summary.
+          </li>
+          <li>
+            Interviewer page: local dashboard, sortable by score/date, with full
+            per-candidate details.
+          </li>
+          <li>
+            All data persists in your browser (localStorage). Close &amp; reopen
+            and it’s still there.
+          </li>
+        </ul>
+        <p class="dim small">
+          Note: PDF/DOCX extraction is hard in a purely static site. This
+          website asks the candidate for missing fields directly (per the brief)
+          and includes an optional “Paste from resume” box.
+        </p>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>© <span id="year"></span> AI Interview Assistant — Static Website</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
