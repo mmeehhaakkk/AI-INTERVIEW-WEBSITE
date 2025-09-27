@@ -45,7 +45,7 @@ AI-INTERVIEW-WEBSITE/
 
 └── assets/
 
-└── logo.svg # Replace with your brand logo
+└── logo.svg
 
 ---
 
