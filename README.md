@@ -1,4 +1,4 @@
-# 🧑‍💻 AI Interview Assistant — Static Website
+# 🧑‍💻 AI Interview Assistant 
 
 A **fully client-side** interview simulator with a timed Q&A flow and a reviewer dashboard — all powered by the browser. No backend, no database, works offline.
 
